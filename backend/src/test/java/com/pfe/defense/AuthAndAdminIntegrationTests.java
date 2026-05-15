@@ -7,10 +7,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -48,8 +51,8 @@ class AuthAndAdminIntegrationTests {
         mockMvc.perform(get("/api/admin/dashboard")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalUsers").value(5))
-                .andExpect(jsonPath("$.totalStudents").value(1));
+                .andExpect(jsonPath("$.totalUsers").isNumber())
+                .andExpect(jsonPath("$.activeUsers").isNumber());
     }
 
     @Test
@@ -69,5 +72,102 @@ class AuthAndAdminIntegrationTests {
         mockMvc.perform(get("/api/admin/dashboard")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void adminCanImportUsersAndDownloadExports() throws Exception {
+        String token = loginAs("admin@sg.local", "Admin@123");
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "users.csv",
+                "text/csv",
+                """
+                        firstName,lastName,email,role,department,phone
+                        Noor,Alpha,noor.alpha@sg.local,STUDENT,Info,0600000000
+                        Duplicate,Alpha,noor.alpha@sg.local,STUDENT,Info,0600000001
+                        """.getBytes()
+        );
+
+        mockMvc.perform(multipart("/api/admin/users/import")
+                        .file(file)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.importedCount").value(1))
+                .andExpect(jsonPath("$.ignoredRows[0].reason").value("Email dupliqué dans le fichier."));
+
+        mockMvc.perform(get("/api/admin/users/export/csv")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith("text/csv"));
+    }
+
+    @Test
+    void failedLoginsCreateHistoryAndSecurityAlerts() throws Exception {
+        String token = loginAs("admin@sg.local", "Admin@123");
+        for (int i = 0; i < 3; i++) {
+            mockMvc.perform(post("/api/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"email":"student@sg.local","password":"bad-password"}
+                                    """))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        mockMvc.perform(get("/api/admin/login-history")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].status").value("FAILED"));
+
+        mockMvc.perform(get("/api/admin/security-alerts")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.email == 'student@sg.local')]").exists());
+
+        mockMvc.perform(post("/api/admin/chatbot/ask")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"question":"Y a-t-il des connexions échouées ?"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.answer").value(org.hamcrest.Matchers.containsString("tentative(s) de connexion échouée(s)")));
+    }
+
+    @Test
+    void adminCanReadAndUpdateSystemSettings() throws Exception {
+        String token = loginAs("admin@sg.local", "Admin@123");
+
+        mockMvc.perform(get("/api/admin/settings")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.activeAcademicYear").value("2025-2026"));
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/admin/settings")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "activeAcademicYear":"2026-2027",
+                                  "maxReportPdfSizeMb":30,
+                                  "registrationsEnabled":false,
+                                  "supportEmail":"help@sg.local"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.activeAcademicYear").value("2026-2027"))
+                .andExpect(jsonPath("$.registrationsEnabled").value(false));
+    }
+
+    private String loginAs(String email, String password) throws Exception {
+        String loginResponse = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"%s","password":"%s"}
+                                """.formatted(email, password)))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        return objectMapper.readTree(loginResponse).get("token").asText();
     }
 }

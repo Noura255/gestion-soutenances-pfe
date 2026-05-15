@@ -5,10 +5,11 @@ import com.pfe.defense.audit.AuditLogRepository;
 import com.pfe.defense.audit.AuditLogService;
 import com.pfe.defense.common.BadRequestException;
 import com.pfe.defense.common.ResourceNotFoundException;
+import com.pfe.defense.defense.DefenseRepository;
+import com.pfe.defense.project.ProjectRepository;
 import com.pfe.defense.user.Role;
 import com.pfe.defense.user.User;
 import com.pfe.defense.user.UserRepository;
-import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,7 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Transactional
@@ -25,37 +28,60 @@ public class AdminService {
     private final AuditLogRepository auditLogRepository;
     private final AuditLogService auditLogService;
     private final PasswordEncoder passwordEncoder;
+    private final ProjectRepository projectRepository;
+    private final DefenseRepository defenseRepository;
+    private final SecurityAlertService securityAlertService;
+    private final AdminChatbotService adminChatbotService;
 
     public AdminService(UserRepository userRepository, AuditLogRepository auditLogRepository,
-                        AuditLogService auditLogService, PasswordEncoder passwordEncoder) {
+                        AuditLogService auditLogService, PasswordEncoder passwordEncoder,
+                        ProjectRepository projectRepository, DefenseRepository defenseRepository,
+                        SecurityAlertService securityAlertService, AdminChatbotService adminChatbotService) {
         this.userRepository = userRepository;
         this.auditLogRepository = auditLogRepository;
         this.auditLogService = auditLogService;
         this.passwordEncoder = passwordEncoder;
+        this.projectRepository = projectRepository;
+        this.defenseRepository = defenseRepository;
+        this.securityAlertService = securityAlertService;
+        this.adminChatbotService = adminChatbotService;
     }
 
     @Transactional(readOnly = true)
     public AdminDashboardResponse dashboard() {
+        Map<Role, Long> usersByRole = new EnumMap<>(Role.class);
+        Arrays.stream(Role.values()).forEach(role -> usersByRole.put(role, userRepository.countByRole(role)));
         return new AdminDashboardResponse(
                 userRepository.count(),
                 userRepository.countByRole(Role.STUDENT),
                 userRepository.countByRole(Role.SUPERVISOR),
                 userRepository.countByRole(Role.JURY),
                 userRepository.countByRole(Role.ADMINISTRATION),
+                userRepository.countByRole(Role.ADMIN),
+                userRepository.countByEnabledTrue(),
+                userRepository.countByEnabledFalse(),
+                projectRepository.count(),
+                defenseRepository.count(),
+                auditLogRepository.countByModuleAndAction("AUTH", "LOGIN_FAILED"),
+                usersByRole,
+                auditLogRepository.findTop5ByModuleAndActionOrderByCreatedAtDesc("AUTH", "LOGIN_FAILED")
+                        .stream().map(this::toLoginHistory).toList(),
+                securityAlertService.getAlerts(),
+                adminChatbotService.suggestions(),
                 auditLogRepository.findTop10ByOrderByCreatedAtDesc().stream().map(AuditLogResponse::from).toList()
         );
     }
 
     @Transactional(readOnly = true)
-    public List<UserResponse> listUsers() {
-        return userRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"))
+    public List<UserResponse> listUsers(String search, Role role, String department, Boolean enabled) {
+        return userRepository.searchUsers(blankToNull(search), role, blankToNull(department), enabled)
                 .stream()
                 .map(UserResponse::from)
                 .toList();
     }
 
     public UserResponse createUser(UserRequest request) {
-        if (userRepository.existsByEmail(request.email())) {
+        if (userRepository.existsByEmailIgnoreCase(request.email())) {
             throw new BadRequestException("Un utilisateur avec cet email existe déjà.");
         }
         if (request.password() == null || request.password().isBlank() || request.password().length() < 8) {
@@ -72,7 +98,7 @@ public class AdminService {
 
     public UserResponse updateUser(Long id, UserRequest request) {
         User user = findUser(id);
-        userRepository.findByEmail(request.email())
+        userRepository.findByEmailIgnoreCase(request.email())
                 .filter(existing -> !existing.getId().equals(id))
                 .ifPresent(existing -> {
                     throw new BadRequestException("Un autre utilisateur utilise déjà cet email.");
@@ -132,14 +158,28 @@ public class AdminService {
     }
 
     @Transactional(readOnly = true)
+    public List<LoginHistoryResponse> loginHistory() {
+        return auditLogRepository.findByModuleAndActionInOrderByCreatedAtDesc("AUTH", List.of("LOGIN", "LOGIN_SUCCESS", "LOGIN_FAILED"))
+                .stream()
+                .map(this::toLoginHistory)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public List<Role> listRoles() {
         return Arrays.asList(Role.values());
+    }
+
+    private LoginHistoryResponse toLoginHistory(com.pfe.defense.audit.AuditLog log) {
+        Role role = userRepository.findByEmailIgnoreCase(log.getPerformedBy()).map(User::getRole).orElse(null);
+        String status = "LOGIN_FAILED".equals(log.getAction()) ? "FAILED" : "SUCCESS";
+        return new LoginHistoryResponse(log.getPerformedBy(), role, status, log.getDescription(), log.getCreatedAt());
     }
 
     private void applyRequest(User user, UserRequest request) {
         user.setFirstName(request.firstName());
         user.setLastName(request.lastName());
-        user.setEmail(request.email());
+        user.setEmail(request.email().trim().toLowerCase());
         user.setRole(request.role());
         user.setDepartment(request.department());
         user.setPhone(request.phone());
@@ -148,6 +188,10 @@ public class AdminService {
     private User findUser(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Utilisateur introuvable avec l'id " + id));
+    }
+
+    private String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 
     private String currentActor() {
