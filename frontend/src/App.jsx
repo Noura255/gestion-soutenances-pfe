@@ -12,6 +12,10 @@ import AdminChatbot from './pages/admin/AdminChatbot'
 import StudentDashboard from './pages/student/StudentDashboard'
 import SupervisorDashboard from './pages/supervisor/SupervisorDashboard'
 import JuryDashboard from './pages/jury/JuryDashboard'
+import JuryDefenses from './pages/jury/JuryDefenses'
+import JuryDefenseDetails from './pages/jury/JuryDefenseDetails'
+import JuryEvaluationForm from './pages/jury/JuryEvaluationForm'
+import JuryReportViewer from './pages/jury/JuryReportViewer'
 import AdministrationDashboard from './pages/administration/AdministrationDashboard'
 import Layout from './components/common/Layout'
 import ProtectedRoute from './routes/ProtectedRoute'
@@ -52,6 +56,10 @@ export default function App() {
       <Route element={<ProtectedRoute allowedRoles={['JURY']} />}>
         <Route element={<Layout />}>
           <Route path="/jury/dashboard" element={<JuryDashboard />} />
+          <Route path="/jury/defenses" element={<JuryDefenses />} />
+          <Route path="/jury/defenses/:id" element={<JuryDefenseDetails />} />
+          <Route path="/jury/defenses/:id/report" element={<JuryReportViewer />} />
+          <Route path="/jury/defenses/:id/evaluation" element={<JuryEvaluationForm />} />
         </Route>
       </Route>
 
