@@ -1,6 +1,8 @@
 ﻿import { useEffect, useState } from 'react'
 import api from '../../services/api'
 import StudentProgress from '../../components/student/StudentProgress'
+import StudentDashboardStats from '../../components/student/StudentDashboardStats'
+import StudentNotifications from '../../components/student/StudentNotifications'
 
 const reportLabels = {
   NOT_SUBMITTED: 'Non déposé',
@@ -57,26 +59,34 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">Filière</p>
-          <p className="mt-3 text-lg font-semibold">{dashboard.field || 'Non renseignée'}</p>
-        </article>
-        <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">Sujet</p>
-          <p className="mt-3 text-lg font-semibold">{dashboard.projectTitle}</p>
-        </article>
-        <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">Encadrant</p>
-          <p className="mt-3 text-lg font-semibold">{dashboard.supervisorName}</p>
-        </article>
-        <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">Prochaine soutenance</p>
-          <p className="mt-3 text-lg font-semibold">{dashboard.defenseDate || 'À planifier'}</p>
-        </article>
-      </div>
+      <StudentDashboardStats dashboard={dashboard} />
 
-      <StudentProgress reportStatus={dashboard.reportStatus} defense={defense} />
+      <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
+        <div className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-2">
+            <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <p className="text-sm text-slate-500">Filière</p>
+              <p className="mt-3 text-lg font-semibold">{dashboard.field || 'Non renseignée'}</p>
+            </article>
+            <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <p className="text-sm text-slate-500">Sujet</p>
+              <p className="mt-3 text-lg font-semibold">{dashboard.projectTitle}</p>
+            </article>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <p className="text-sm text-slate-500">Encadrant</p>
+              <p className="mt-3 text-lg font-semibold">{dashboard.supervisorName}</p>
+            </article>
+            <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <p className="text-sm text-slate-500">Prochaine soutenance</p>
+              <p className="mt-3 text-lg font-semibold">{dashboard.defenseDate || 'À planifier'}</p>
+            </article>
+          </div>
+          <StudentProgress reportStatus={dashboard.reportStatus} defense={defense} />
+        </div>
+        <StudentNotifications />
+      </div>
     </section>
   )
 }
