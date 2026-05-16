@@ -10,6 +10,10 @@ import GlobalNotifications from './pages/admin/GlobalNotifications'
 import AcademicStructureManagement from './pages/admin/AcademicStructureManagement'
 import AdminChatbot from './pages/admin/AdminChatbot'
 import StudentDashboard from './pages/student/StudentDashboard'
+import StudentProjectPage from './pages/student/StudentProjectPage'
+import StudentReportPage from './pages/student/StudentReportPage'
+import StudentDefensePage from './pages/student/StudentDefensePage'
+import StudentChatbotPage from './pages/student/StudentChatbotPage'
 import SupervisorDashboard from './pages/supervisor/SupervisorDashboard'
 import JuryDashboard from './pages/jury/JuryDashboard'
 import AdministrationDashboard from './pages/administration/AdministrationDashboard'
@@ -40,6 +44,10 @@ export default function App() {
       <Route element={<ProtectedRoute allowedRoles={['STUDENT']} />}>
         <Route element={<Layout />}>
           <Route path="/student/dashboard" element={<StudentDashboard />} />
+          <Route path="/student/project" element={<StudentProjectPage />} />
+          <Route path="/student/report" element={<StudentReportPage />} />
+          <Route path="/student/defense" element={<StudentDefensePage />} />
+          <Route path="/student/chatbot" element={<StudentChatbotPage />} />
         </Route>
       </Route>
 

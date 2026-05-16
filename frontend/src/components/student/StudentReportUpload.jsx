@@ -53,7 +53,7 @@ export default function StudentReportUpload({ onUploaded }) {
       <div className="mb-4 rounded-2xl bg-slate-50 p-4 text-sm">
         <p><span className="font-semibold">Statut :</span> {statusLabels[status?.status] || 'Chargement...'}</p>
         <p className="mt-1 text-slate-600">Visible au jury : {status?.visibleToJury ? 'Oui' : 'Non'}</p>
-        {status?.supervisorComment && <p className="mt-2 text-amber-700">Commentaire : {status.supervisorComment}</p>}
+        {status?.supervisorComment && <p className="mt-2 text-violet-700">Commentaire : {status.supervisorComment}</p>}
       </div>
       <form onSubmit={submit} className="space-y-4">
         <input type="file" accept="application/pdf,.pdf" onChange={(event) => setFile(event.target.files?.[0] || null)} className="block w-full rounded-2xl border border-slate-200 bg-white px-4 py-3" />

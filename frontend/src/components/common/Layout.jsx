@@ -13,9 +13,21 @@ const adminLinks = [
   { to: '/admin/logs', label: 'Logs système' },
 ]
 
+const studentLinks = [
+  { to: '/student/dashboard', label: 'Dashboard' },
+  { to: '/student/project', label: 'Sujet' },
+  { to: '/student/report', label: 'Rapport' },
+  { to: '/student/defense', label: 'Soutenance' },
+  { to: '/student/chatbot', label: 'Chatbot étudiant' },
+]
+
 export default function Layout() {
   const { user, logout } = useAuth()
-  const links = user?.role === 'ADMIN' ? adminLinks : []
+  const links = user?.role === 'ADMIN'
+    ? adminLinks
+    : user?.role === 'STUDENT'
+      ? studentLinks
+      : []
 
   return (
     <div className="min-h-screen bg-slate-50">

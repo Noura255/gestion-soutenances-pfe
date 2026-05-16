@@ -1,9 +1,6 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import api from '../../services/api'
-import StudentProjectForm from '../../components/student/StudentProjectForm'
-import StudentReportUpload from '../../components/student/StudentReportUpload'
-import StudentDefenseInfo from '../../components/student/StudentDefenseInfo'
-import StudentChatbot from '../../components/student/StudentChatbot'
+import StudentProgress from '../../components/student/StudentProgress'
 
 const reportLabels = {
   NOT_SUBMITTED: 'Non déposé',
@@ -11,6 +8,14 @@ const reportLabels = {
   NEEDS_CORRECTION: 'Corrections demandées',
   APPROVED_BY_SUPERVISOR: "Approuvé par l'encadrant",
   VISIBLE_TO_JURY: 'Visible au jury',
+}
+
+const reportStyles = {
+  NOT_SUBMITTED: 'from-slate-500 to-slate-700',
+  SUBMITTED_TO_SUPERVISOR: 'from-sky-500 to-indigo-600',
+  NEEDS_CORRECTION: 'from-violet-500 to-indigo-700',
+  APPROVED_BY_SUPERVISOR: 'from-emerald-500 to-teal-600',
+  VISIBLE_TO_JURY: 'from-indigo-500 to-violet-600',
 }
 
 export default function StudentDashboard() {
@@ -36,9 +41,20 @@ export default function StudentDashboard() {
 
   return (
     <section className="space-y-6">
-      <div>
-        <p className="text-sm font-medium text-indigo-600">Espace étudiant</p>
-        <h2 className="text-3xl font-bold tracking-tight">Bonjour, {dashboard.studentName}</h2>
+      <div className={`overflow-hidden rounded-[2rem] bg-gradient-to-br ${reportStyles[dashboard.reportStatus] || reportStyles.NOT_SUBMITTED} p-6 text-white shadow-sm`}>
+        <div className="flex flex-wrap items-start justify-between gap-6">
+          <div>
+            <p className="text-sm font-medium text-white/75">Espace étudiant</p>
+            <h2 className="mt-2 text-3xl font-bold tracking-tight">Bonjour, {dashboard.studentName}</h2>
+            <p className="mt-3 max-w-2xl text-white/80">
+              Suis ici l’état de ton projet, de ton rapport et de ta soutenance.
+            </p>
+          </div>
+          <div className="rounded-3xl bg-white/15 p-4 backdrop-blur">
+            <p className="text-sm text-white/75">Statut du rapport</p>
+            <p className="mt-2 text-lg font-semibold">{reportLabels[dashboard.reportStatus]}</p>
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -55,21 +71,12 @@ export default function StudentDashboard() {
           <p className="mt-3 text-lg font-semibold">{dashboard.supervisorName}</p>
         </article>
         <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">Rapport</p>
-          <p className="mt-3 text-lg font-semibold">{reportLabels[dashboard.reportStatus]}</p>
+          <p className="text-sm text-slate-500">Prochaine soutenance</p>
+          <p className="mt-3 text-lg font-semibold">{dashboard.defenseDate || 'À planifier'}</p>
         </article>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <StudentProjectForm onSaved={load} />
-        <StudentReportUpload onUploaded={load} />
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-2">
-        <StudentDefenseInfo defense={defense} />
-        <StudentChatbot />
-      </div>
+      <StudentProgress reportStatus={dashboard.reportStatus} defense={defense} />
     </section>
   )
 }
-
