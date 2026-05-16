@@ -13,9 +13,14 @@ const adminLinks = [
   { to: '/admin/logs', label: 'Logs système' },
 ]
 
+const supervisorLinks = [
+  { to: '/supervisor/dashboard', label: 'Dashboard' },
+  { to: '/supervisor/students', label: 'Mes Étudiants' },
+]
+
 export default function Layout() {
   const { user, logout } = useAuth()
-  const links = user?.role === 'ADMIN' ? adminLinks : []
+  const links = user?.role === 'ADMIN' ? adminLinks : user?.role === 'SUPERVISOR' ? supervisorLinks : []
 
   return (
     <div className="min-h-screen bg-slate-50">

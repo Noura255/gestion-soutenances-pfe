@@ -11,6 +11,8 @@ import AcademicStructureManagement from './pages/admin/AcademicStructureManageme
 import AdminChatbot from './pages/admin/AdminChatbot'
 import StudentDashboard from './pages/student/StudentDashboard'
 import SupervisorDashboard from './pages/supervisor/SupervisorDashboard'
+import SupervisedStudents from './pages/supervisor/SupervisedStudents'
+import SupervisorReportDetails from './pages/supervisor/SupervisorReportDetails'
 import JuryDashboard from './pages/jury/JuryDashboard'
 import AdministrationDashboard from './pages/administration/AdministrationDashboard'
 import Layout from './components/common/Layout'
@@ -46,6 +48,8 @@ export default function App() {
       <Route element={<ProtectedRoute allowedRoles={['SUPERVISOR']} />}>
         <Route element={<Layout />}>
           <Route path="/supervisor/dashboard" element={<SupervisorDashboard />} />
+          <Route path="/supervisor/students" element={<SupervisedStudents />} />
+          <Route path="/supervisor/reports/:id" element={<SupervisorReportDetails />} />
         </Route>
       </Route>
 
