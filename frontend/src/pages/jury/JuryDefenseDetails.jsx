@@ -4,7 +4,6 @@ import api from '../../services/api'
 import EvaluationStatusBadge from '../../components/jury/EvaluationStatusBadge'
 import ReportStatusBadge from '../../components/jury/ReportStatusBadge'
 import JuryReportViewer from './JuryReportViewer'
-import JuryChatbot from './JuryChatbot'
 
 function formatDate(value) {
   return value ? new Date(`${value}T00:00:00`).toLocaleDateString('fr-FR') : 'À planifier'
@@ -34,8 +33,7 @@ export default function JuryDefenseDetails() {
   }
 
   return (
-    <>
-      <section className="space-y-6">
+    <section className="space-y-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-sm font-medium text-indigo-600">Module jury</p>
@@ -104,8 +102,6 @@ export default function JuryDefenseDetails() {
             </div>
           )}
         </section>
-      </section>
-      <JuryChatbot />
-    </>
+    </section>
   )
 }

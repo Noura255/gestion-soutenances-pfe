@@ -7,6 +7,7 @@ import com.pfe.defense.defense.Defense;
 import com.pfe.defense.evaluation.Evaluation;
 import com.pfe.defense.evaluation.EvaluationRepository;
 import com.pfe.defense.evaluation.EvaluationStatus;
+import com.pfe.defense.jury.dto.ChatbotAnswerResponse;
 import com.pfe.defense.jury.dto.DashboardDTO;
 import com.pfe.defense.jury.dto.DefenseDetailDTO;
 import com.pfe.defense.jury.dto.DefenseSummaryDTO;
@@ -29,10 +30,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.Normalizer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 @Service
@@ -45,15 +48,18 @@ public class JuryServiceImpl implements JuryService {
     private final ReportRepository reportRepository;
     private final EvaluationRepository evaluationRepository;
     private final UserRepository userRepository;
+    private final JuryChatbotService juryChatbotService;
 
     public JuryServiceImpl(JuryRepository juryRepository,
                            ReportRepository reportRepository,
                            EvaluationRepository evaluationRepository,
-                           UserRepository userRepository) {
+                           UserRepository userRepository,
+                           JuryChatbotService juryChatbotService) {
         this.juryRepository = juryRepository;
         this.reportRepository = reportRepository;
         this.evaluationRepository = evaluationRepository;
         this.userRepository = userRepository;
+        this.juryChatbotService = juryChatbotService;
     }
 
     @Override
@@ -85,7 +91,8 @@ public class JuryServiceImpl implements JuryService {
                 availableReports,
                 unavailableReports,
                 pendingEvaluations,
-                submittedEvaluations
+                submittedEvaluations,
+                chatbotSuggestions()
         );
     }
 
@@ -191,6 +198,18 @@ public class JuryServiceImpl implements JuryService {
 
         Evaluation saved = evaluationRepository.save(evaluation);
         return toEvaluationResponse(saved, defense);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<String> chatbotSuggestions() {
+        return juryChatbotService.suggestions();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ChatbotAnswerResponse askChatbot(String question) {
+        return juryChatbotService.ask(question);
     }
 
     private DefenseSummaryDTO toDefenseSummary(Defense defense, User juryMember) {
@@ -368,5 +387,10 @@ public class JuryServiceImpl implements JuryService {
         }
         return userRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new UnauthorizedActionException("Utilisateur jury introuvable."));
+    }
+
+    private String normalize(String value) {
+        String noAccent = Normalizer.normalize(value, Normalizer.Form.NFD).replaceAll("\\p{M}", "");
+        return noAccent.toLowerCase(Locale.ROOT);
     }
 }
