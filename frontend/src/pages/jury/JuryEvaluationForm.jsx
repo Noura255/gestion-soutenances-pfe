@@ -2,7 +2,6 @@ import { Link, useParams } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import api from '../../services/api'
 import EvaluationReadonlyView from '../../components/jury/EvaluationReadonlyView'
-import JuryChatbot from './JuryChatbot'
 
 const emptyForm = {
   notePresentation: '',
@@ -300,7 +299,6 @@ export default function JuryEvaluationForm() {
         </div>
       )}
 
-      <JuryChatbot />
     </>
   )
 }

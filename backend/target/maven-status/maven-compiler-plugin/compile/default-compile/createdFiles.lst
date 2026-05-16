@@ -52,6 +52,7 @@ com\pfe\defense\admin\dto\FieldRequest.class
 com\pfe\defense\common\BadRequestException.class
 com\pfe\defense\auth\AuthController.class
 com\pfe\defense\admin\dto\NotificationResponse.class
+com\pfe\defense\jury\JuryChatbotService.class
 com\pfe\defense\admin\dto\AcademicYearResponse.class
 com\pfe\defense\report\ReportStatus.class
 com\pfe\defense\common\HealthController.class
