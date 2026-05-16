@@ -1,6 +1,7 @@
 package com.pfe.defense.jury;
 
 import com.pfe.defense.evaluation.EvaluationStatus;
+import com.pfe.defense.jury.dto.ChatbotAnswerResponse;
 import com.pfe.defense.jury.dto.DashboardDTO;
 import com.pfe.defense.jury.dto.DefenseDetailDTO;
 import com.pfe.defense.jury.dto.DefenseSummaryDTO;
@@ -24,4 +25,8 @@ public interface JuryService {
     EvaluationResponseDTO updateDraft(Long evaluationId, EvaluationRequestDTO request);
 
     EvaluationResponseDTO submit(Long evaluationId, EvaluationRequestDTO request);
+
+    List<String> chatbotSuggestions();
+
+    ChatbotAnswerResponse askChatbot(String question);
 }

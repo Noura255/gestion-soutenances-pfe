@@ -7,6 +7,7 @@ public record DashboardDTO(
         int availableReports,
         int unavailableReports,
         int pendingEvaluations,
-        int submittedEvaluations
+        int submittedEvaluations,
+        List<String> chatbotSuggestions
 ) {
 }

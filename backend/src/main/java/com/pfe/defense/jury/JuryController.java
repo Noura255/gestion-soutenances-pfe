@@ -1,6 +1,8 @@
 package com.pfe.defense.jury;
 
 import com.pfe.defense.evaluation.EvaluationStatus;
+import com.pfe.defense.jury.dto.ChatbotAnswerResponse;
+import com.pfe.defense.jury.dto.ChatbotAskRequest;
 import com.pfe.defense.jury.dto.DashboardDTO;
 import com.pfe.defense.jury.dto.DefenseDetailDTO;
 import com.pfe.defense.jury.dto.DefenseSummaryDTO;
@@ -67,5 +69,15 @@ public class JuryController {
     @PutMapping("/evaluations/{id}/submit")
     public EvaluationResponseDTO submit(@PathVariable Long id, @Valid @RequestBody EvaluationRequestDTO request) {
         return juryService.submit(id, request);
+    }
+
+    @GetMapping("/chatbot/suggestions")
+    public List<String> chatbotSuggestions() {
+        return juryService.chatbotSuggestions();
+    }
+
+    @PostMapping("/chatbot/ask")
+    public ChatbotAnswerResponse askChatbot(@Valid @RequestBody ChatbotAskRequest request) {
+        return juryService.askChatbot(request.question());
     }
 }
