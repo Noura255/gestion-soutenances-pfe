@@ -23,6 +23,9 @@ public class Room {
     @Column(nullable = false)
     private boolean available = true;
 
+    @Column(nullable = false)
+    private boolean seedData = false;
+
     @JsonIgnore
     @OneToMany(mappedBy = "room")
     private List<Defense> defenses;
@@ -69,6 +72,14 @@ public class Room {
 
     public void setAvailable(boolean available) {
         this.available = available;
+    }
+
+    public boolean isSeedData() {
+        return seedData;
+    }
+
+    public void setSeedData(boolean seedData) {
+        this.seedData = seedData;
     }
 
     public List<Defense> getDefenses() {

@@ -72,17 +72,32 @@ docker compose up --build
 - Backend : `http://localhost:8080`
 - MySQL : `localhost:3306`
 
-## Comptes initiaux
+## Comptes de test
 
 | Rôle | Email | Mot de passe |
 | --- | --- | --- |
-| ADMIN | `admin@sg.local` | `Admin@123` |
-| STUDENT | `student@sg.local` | `Student@123` |
-| SUPERVISOR | `supervisor@sg.local` | `Supervisor@123` |
-| JURY | `jury@sg.local` | `Jury@123` |
-| ADMINISTRATION | `administration@sg.local` | `Administration@123` |
+| ADMIN | `admin@sgsoutenance.com` | `admin123` |
+| STUDENT | `student1@sgsoutenance.com` | `password123` |
+| SUPERVISOR | `supervisor1@sgsoutenance.com` | `password123` |
+| JURY | `jury1@sgsoutenance.com` | `password123` |
+| ADMINISTRATION | `administration1@sgsoutenance.com` | `password123` |
 
-Tous les mots de passe sont encodés avec BCrypt à l'insertion.
+Tous les mots de passe sont encodés avec BCrypt à l'insertion. L'administrateur principal `admin@sgsoutenance.com` est protégé contre les modifications depuis le module ADMIN.
+
+## Seeder de données
+
+Le `DataSeeder` ajoute des utilisateurs, départements, filières, années universitaires, projets, rapports, salles, jurys, soutenances, évaluations, logs et notifications de test liés entre eux. Les données semées sont marquées avec `seedData=true` quand l'entité le permet ; les vraies données existantes ne sont jamais supprimées.
+
+```properties
+app.seed.enabled=true
+app.seed.reset-fake-data=false
+```
+
+- `app.seed.enabled=false` : désactive complètement le seeder.
+- `app.seed.enabled=true` : ajoute uniquement les données de test manquantes.
+- `app.seed.reset-fake-data=true` : supprime uniquement les objets marqués `seedData=true`, puis les recrée proprement.
+
+Les tables restent créées automatiquement par Hibernate via `spring.jpa.hibernate.ddl-auto=update` ; aucun script SQL manuel n'est nécessaire.
 
 ## Endpoints livrés
 

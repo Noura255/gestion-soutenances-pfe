@@ -24,6 +24,8 @@ import java.util.Map;
 @Service
 @Transactional
 public class AdminService {
+    private static final String PRIMARY_ADMIN_EMAIL = "admin@sgsoutenance.com";
+
     private final UserRepository userRepository;
     private final AuditLogRepository auditLogRepository;
     private final AuditLogService auditLogService;
@@ -98,6 +100,7 @@ public class AdminService {
 
     public UserResponse updateUser(Long id, UserRequest request) {
         User user = findUser(id);
+        assertNotPrimaryAdmin(user);
         userRepository.findByEmailIgnoreCase(request.email())
                 .filter(existing -> !existing.getId().equals(id))
                 .ifPresent(existing -> {
@@ -117,6 +120,7 @@ public class AdminService {
 
     public void deleteUser(Long id) {
         User user = findUser(id);
+        assertNotPrimaryAdmin(user);
         if (user.getRole() == Role.ADMIN && user.getEmail().equals(currentActor())) {
             throw new BadRequestException("Un administrateur ne peut pas supprimer son propre compte.");
         }
@@ -126,6 +130,7 @@ public class AdminService {
 
     public UserResponse disableUser(Long id) {
         User user = findUser(id);
+        assertNotPrimaryAdmin(user);
         if (user.getRole() == Role.ADMIN && user.getEmail().equals(currentActor())) {
             throw new BadRequestException("Un administrateur ne peut pas désactiver son propre compte.");
         }
@@ -145,6 +150,7 @@ public class AdminService {
 
     public void resetPassword(Long id, PasswordResetRequest request) {
         User user = findUser(id);
+        assertNotPrimaryAdmin(user);
         user.setPassword(passwordEncoder.encode(request.newPassword()));
         userRepository.save(user);
         auditLogService.log("RESET_PASSWORD", "ADMIN_USER", "Réinitialisation du mot de passe pour " + user.getEmail(), currentActor());
@@ -188,6 +194,12 @@ public class AdminService {
     private User findUser(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Utilisateur introuvable avec l'id " + id));
+    }
+
+    private void assertNotPrimaryAdmin(User user) {
+        if (PRIMARY_ADMIN_EMAIL.equalsIgnoreCase(user.getEmail())) {
+            throw new BadRequestException("L'administrateur principal ne peut pas être modifié.");
+        }
     }
 
     private String blankToNull(String value) {

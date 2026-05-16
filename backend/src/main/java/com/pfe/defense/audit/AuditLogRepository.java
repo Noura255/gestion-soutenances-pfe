@@ -12,4 +12,7 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
     List<AuditLog> findByModuleAndActionInOrderByCreatedAtDesc(String module, Collection<String> actions);
     List<AuditLog> findTop5ByModuleAndActionOrderByCreatedAtDesc(String module, String action);
     long countByModuleAndAction(String module, String action);
+    boolean existsByActionAndModuleAndPerformedByAndDescriptionAndSeedDataTrue(String action, String module,
+                                                                              String performedBy, String description);
+    List<AuditLog> findAllBySeedDataTrue();
 }

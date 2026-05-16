@@ -23,6 +23,9 @@ public class AuditLog {
     @Column(nullable = false)
     private String performedBy;
 
+    @Column(nullable = false)
+    private boolean seedData = false;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -65,6 +68,14 @@ public class AuditLog {
 
     public void setPerformedBy(String performedBy) {
         this.performedBy = performedBy;
+    }
+
+    public boolean isSeedData() {
+        return seedData;
+    }
+
+    public void setSeedData(boolean seedData) {
+        this.seedData = seedData;
     }
 
     public LocalDateTime getCreatedAt() {

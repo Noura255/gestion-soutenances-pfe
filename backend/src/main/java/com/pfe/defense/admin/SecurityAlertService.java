@@ -41,7 +41,7 @@ public class SecurityAlertService {
                             user == null ? null : user.getRole(),
                             entry.getValue(),
                             severity,
-                            "Attention : plusieurs tentatives de connexion échouées pour cet utilisateur. Voulez-vous désactiver ce compte ?"
+                            "Plusieurs tentatives de connexion échouées détectées pour " + entry.getKey() + ". Voulez-vous désactiver ce compte ?"
                     );
                 })
                 .sorted(Comparator.comparingLong(SecurityAlertResponse::failedAttempts).reversed())

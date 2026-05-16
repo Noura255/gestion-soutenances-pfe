@@ -21,6 +21,9 @@ public class Notification {
     @Enumerated(EnumType.STRING)
     private Role targetRole;
 
+    @Column(nullable = false)
+    private boolean seedData = false;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -36,5 +39,7 @@ public class Notification {
     public void setMessage(String message) { this.message = message; }
     public Role getTargetRole() { return targetRole; }
     public void setTargetRole(Role targetRole) { this.targetRole = targetRole; }
+    public boolean isSeedData() { return seedData; }
+    public void setSeedData(boolean seedData) { this.seedData = seedData; }
     public LocalDateTime getCreatedAt() { return createdAt; }
 }

@@ -16,6 +16,9 @@ public class JuryAssignment {
     @Column(nullable = false)
     private LocalDateTime assignedAt;
 
+    @Column(nullable = false)
+    private boolean seedData = false;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false, unique = true)
     private Project project;
@@ -53,6 +56,14 @@ public class JuryAssignment {
 
     public void setAssignedAt(LocalDateTime assignedAt) {
         this.assignedAt = assignedAt;
+    }
+
+    public boolean isSeedData() {
+        return seedData;
+    }
+
+    public void setSeedData(boolean seedData) {
+        this.seedData = seedData;
     }
 
     public Project getProject() {

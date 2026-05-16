@@ -26,6 +26,9 @@ public class Defense {
     @Column(nullable = false)
     private boolean published = false;
 
+    @Column(nullable = false)
+    private boolean seedData = false;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false, unique = true)
     private Project project;
@@ -80,6 +83,14 @@ public class Defense {
 
     public void setPublished(boolean published) {
         this.published = published;
+    }
+
+    public boolean isSeedData() {
+        return seedData;
+    }
+
+    public void setSeedData(boolean seedData) {
+        this.seedData = seedData;
     }
 
     public Project getProject() {

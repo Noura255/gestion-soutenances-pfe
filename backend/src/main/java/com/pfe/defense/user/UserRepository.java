@@ -15,6 +15,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     long countByRole(Role role);
     long countByEnabledTrue();
     long countByEnabledFalse();
+    List<User> findAllBySeedDataTrue();
 
     @Query("""
             select u from User u

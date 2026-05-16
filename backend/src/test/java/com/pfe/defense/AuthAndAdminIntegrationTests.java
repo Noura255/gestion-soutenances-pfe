@@ -2,8 +2,13 @@ package com.pfe.defense;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pfe.defense.audit.AuditLogRepository;
+import com.pfe.defense.config.DataSeeder;
+import com.pfe.defense.project.ProjectRepository;
+import com.pfe.defense.user.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.DefaultApplicationArguments;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -26,12 +31,24 @@ class AuthAndAdminIntegrationTests {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private DataSeeder dataSeeder;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private ProjectRepository projectRepository;
+
+    @Autowired
+    private AuditLogRepository auditLogRepository;
+
     @Test
     void adminCanLoginReadProfileAndOpenDashboard() throws Exception {
         String loginResponse = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"email":"admin@sg.local","password":"Admin@123"}
+                                {"email":"admin@sgsoutenance.com","password":"admin123"}
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.tokenType").value("Bearer"))
@@ -45,7 +62,7 @@ class AuthAndAdminIntegrationTests {
         mockMvc.perform(get("/api/auth/me")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email").value("admin@sg.local"))
+                .andExpect(jsonPath("$.email").value("admin@sgsoutenance.com"))
                 .andExpect(jsonPath("$.role").value("ADMIN"));
 
         mockMvc.perform(get("/api/admin/dashboard")
@@ -60,7 +77,7 @@ class AuthAndAdminIntegrationTests {
         String loginResponse = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"email":"student@sg.local","password":"Student@123"}
+                                {"email":"student1@sgsoutenance.com","password":"password123"}
                                 """))
                 .andExpect(status().isOk())
                 .andReturn()
@@ -76,7 +93,7 @@ class AuthAndAdminIntegrationTests {
 
     @Test
     void adminCanImportUsersAndDownloadExports() throws Exception {
-        String token = loginAs("admin@sg.local", "Admin@123");
+        String token = loginAs("admin@sgsoutenance.com", "admin123");
         MockMultipartFile file = new MockMultipartFile(
                 "file",
                 "users.csv",
@@ -103,12 +120,12 @@ class AuthAndAdminIntegrationTests {
 
     @Test
     void failedLoginsCreateHistoryAndSecurityAlerts() throws Exception {
-        String token = loginAs("admin@sg.local", "Admin@123");
+        String token = loginAs("admin@sgsoutenance.com", "admin123");
         for (int i = 0; i < 3; i++) {
             mockMvc.perform(post("/api/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
-                                    {"email":"student@sg.local","password":"bad-password"}
+                                    {"email":"student1@sgsoutenance.com","password":"bad-password"}
                                     """))
                     .andExpect(status().isUnauthorized());
         }
@@ -121,7 +138,7 @@ class AuthAndAdminIntegrationTests {
         mockMvc.perform(get("/api/admin/security-alerts")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[?(@.email == 'student@sg.local')]").exists());
+                .andExpect(jsonPath("$[?(@.email == 'student1@sgsoutenance.com')]").exists());
 
         mockMvc.perform(post("/api/admin/chatbot/ask")
                         .header("Authorization", "Bearer " + token)
@@ -135,7 +152,7 @@ class AuthAndAdminIntegrationTests {
 
     @Test
     void adminCanReadAndUpdateSystemSettings() throws Exception {
-        String token = loginAs("admin@sg.local", "Admin@123");
+        String token = loginAs("admin@sgsoutenance.com", "admin123");
 
         mockMvc.perform(get("/api/admin/settings")
                         .header("Authorization", "Bearer " + token))
@@ -156,6 +173,29 @@ class AuthAndAdminIntegrationTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.activeAcademicYear").value("2026-2027"))
                 .andExpect(jsonPath("$.registrationsEnabled").value(false));
+    }
+
+    @Test
+    void seededFailedLoginsExposeStudent5SecurityAlert() throws Exception {
+        String token = loginAs("admin@sgsoutenance.com", "admin123");
+
+        mockMvc.perform(get("/api/admin/security-alerts")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.email == 'student5@sgsoutenance.com')]").exists());
+    }
+
+    @Test
+    void seederIsIdempotentWhenExecutedAgain() throws Exception {
+        int seedUsersBefore = userRepository.findAllBySeedDataTrue().size();
+        int seedProjectsBefore = projectRepository.findAllBySeedDataTrue().size();
+        int seedLogsBefore = auditLogRepository.findAllBySeedDataTrue().size();
+
+        dataSeeder.run(new DefaultApplicationArguments(new String[0]));
+
+        org.assertj.core.api.Assertions.assertThat(userRepository.findAllBySeedDataTrue()).hasSize(seedUsersBefore);
+        org.assertj.core.api.Assertions.assertThat(projectRepository.findAllBySeedDataTrue()).hasSize(seedProjectsBefore);
+        org.assertj.core.api.Assertions.assertThat(auditLogRepository.findAllBySeedDataTrue()).hasSize(seedLogsBefore);
     }
 
     private String loginAs(String email, String password) throws Exception {

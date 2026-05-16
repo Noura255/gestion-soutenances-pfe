@@ -15,9 +15,14 @@ public class AcademicYear {
     @Column(nullable = false)
     private boolean active;
 
+    @Column(nullable = false)
+    private boolean seedData = false;
+
     public Long getId() { return id; }
     public String getLabel() { return label; }
     public void setLabel(String label) { this.label = label; }
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
+    public boolean isSeedData() { return seedData; }
+    public void setSeedData(boolean seedData) { this.seedData = seedData; }
 }

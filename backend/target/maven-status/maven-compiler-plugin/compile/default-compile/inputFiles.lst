@@ -54,7 +54,7 @@
 /Users/mac/Desktop/everything/TP4/projet_devops/system_gestion_soutenance/backend/src/main/java/com/pfe/defense/common/ResourceNotFoundException.java
 /Users/mac/Desktop/everything/TP4/projet_devops/system_gestion_soutenance/backend/src/main/java/com/pfe/defense/common/UnauthorizedActionException.java
 /Users/mac/Desktop/everything/TP4/projet_devops/system_gestion_soutenance/backend/src/main/java/com/pfe/defense/config/CorsConfig.java
-/Users/mac/Desktop/everything/TP4/projet_devops/system_gestion_soutenance/backend/src/main/java/com/pfe/defense/config/DataInitializer.java
+/Users/mac/Desktop/everything/TP4/projet_devops/system_gestion_soutenance/backend/src/main/java/com/pfe/defense/config/DataSeeder.java
 /Users/mac/Desktop/everything/TP4/projet_devops/system_gestion_soutenance/backend/src/main/java/com/pfe/defense/defense/Defense.java
 /Users/mac/Desktop/everything/TP4/projet_devops/system_gestion_soutenance/backend/src/main/java/com/pfe/defense/defense/DefenseRepository.java
 /Users/mac/Desktop/everything/TP4/projet_devops/system_gestion_soutenance/backend/src/main/java/com/pfe/defense/defense/DefenseStatus.java

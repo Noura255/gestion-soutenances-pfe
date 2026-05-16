@@ -39,6 +39,9 @@ public class Evaluation {
     @Column(nullable = false)
     private EvaluationStatus status = EvaluationStatus.DRAFT;
 
+    @Column(nullable = false)
+    private boolean seedData = false;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -123,6 +126,14 @@ public class Evaluation {
 
     public void setStatus(EvaluationStatus status) {
         this.status = status;
+    }
+
+    public boolean isSeedData() {
+        return seedData;
+    }
+
+    public void setSeedData(boolean seedData) {
+        this.seedData = seedData;
     }
 
     public LocalDateTime getCreatedAt() {

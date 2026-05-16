@@ -26,6 +26,9 @@ public class Report {
     @Column(nullable = false)
     private boolean visibleToJury = false;
 
+    @Column(nullable = false)
+    private boolean seedData = false;
+
     private LocalDateTime uploadedAt;
     private LocalDateTime approvedAt;
     private LocalDateTime visibilityActivatedAt;
@@ -84,6 +87,14 @@ public class Report {
 
     public void setVisibleToJury(boolean visibleToJury) {
         this.visibleToJury = visibleToJury;
+    }
+
+    public boolean isSeedData() {
+        return seedData;
+    }
+
+    public void setSeedData(boolean seedData) {
+        this.seedData = seedData;
     }
 
     public LocalDateTime getUploadedAt() {

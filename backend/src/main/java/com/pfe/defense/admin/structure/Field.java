@@ -16,9 +16,14 @@ public class Field {
     @JoinColumn(name = "department_id", nullable = false)
     private Department department;
 
+    @Column(nullable = false)
+    private boolean seedData = false;
+
     public Long getId() { return id; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     public Department getDepartment() { return department; }
     public void setDepartment(Department department) { this.department = department; }
+    public boolean isSeedData() { return seedData; }
+    public void setSeedData(boolean seedData) { this.seedData = seedData; }
 }

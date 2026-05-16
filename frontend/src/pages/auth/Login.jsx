@@ -13,7 +13,7 @@ const roleToPath = {
 export default function Login() {
   const { user, login } = useAuth()
   const navigate = useNavigate()
-  const [form, setForm] = useState({ email: 'admin@sg.local', password: 'Admin@123' })
+  const [form, setForm] = useState({ email: 'admin@sgsoutenance.com', password: 'admin123' })
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
