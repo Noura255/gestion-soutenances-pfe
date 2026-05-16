@@ -8,6 +8,7 @@ import java.util.Optional;
 
 public interface ProjectRepository extends JpaRepository<Project, Long> {
     Optional<Project> findByTitleIgnoreCaseAndSeedDataTrue(String title);
+    Optional<Project> findByStudent(User student);
     List<Project> findAllBySeedDataTrue();
     boolean existsByStudentOrSupervisor(User student, User supervisor);
 }
