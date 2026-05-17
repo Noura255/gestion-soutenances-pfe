@@ -35,8 +35,6 @@ Le projet couvre la gestion des utilisateurs, projets, rapports, jurys, soutenan
 
 ### DevOps
 
-- Docker
-- Docker Compose
 - GitLab CI/CD
 
 ---
@@ -317,12 +315,6 @@ npm run dev
 npm run build
 ```
 
-### Docker
-
-```bash
-docker compose up --build
-```
-
 ---
 
 ## 10. Conventions importantes
@@ -349,7 +341,6 @@ docker compose up --build
 - `User`
 - `Role`
 - `pom.xml`
-- `docker-compose.yml`
 - `.gitlab-ci.yml`
 
 ### Frontend
@@ -375,4 +366,3 @@ docker compose up --build
    - contrôleurs minces
    - sécurité validée côté service
    - composants React réutilisables
-

@@ -6,7 +6,7 @@ Base commune d'une application de gestion des soutenances **PFE / Master**.
 
 - Backend : Spring Boot 3, Java 17, Maven, Spring Security, JWT, JPA / Hibernate, MySQL
 - Frontend : React, Vite, Tailwind CSS
-- DevOps : Docker, Docker Compose, GitLab CI/CD, GitLab Runner
+- DevOps : GitLab CI/CD, GitLab Runner
 
 ## Architecture
 
@@ -61,16 +61,6 @@ Le projet contient trois configurations partagées :
 
 Dans IntelliJ, recharge le projet Maven si nécessaire, sélectionne `Full App` dans la liste déroulante en haut à droite, puis clique sur le bouton ▶.  
 Le backend utilise Java 17 : configure le **Project SDK** d'IntelliJ sur un JDK 17 avant le premier lancement.
-
-### Docker Compose
-
-```bash
-docker compose up --build
-```
-
-- Frontend : `http://localhost:3000`
-- Backend : `http://localhost:8080`
-- MySQL : `localhost:3306`
 
 ## Comptes de test
 
