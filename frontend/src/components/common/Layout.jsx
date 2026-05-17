@@ -164,7 +164,7 @@ export default function Layout() {
             )}
           </nav>
         </aside>
-        <main>
+        <main className="min-w-0">
           <Outlet />
         </main>
       </div>
