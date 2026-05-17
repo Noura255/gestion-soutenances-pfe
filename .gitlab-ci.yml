@@ -2,24 +2,30 @@ stages:
   - build
   - test
 
-# ----- PIPELINE BACKEND (Spring Boot) -----
+# ----- BACKEND -----
 build_backend:
   stage: build
+  image: maven:3.9.6-eclipse-temurin-17
+
   script:
     - cd backend
-    - .\mvnw clean compile
-  # tags:
-  #   - windows  # Décommente cette ligne si tu as mis le tag 'windows' lors de la création du runner
+    - chmod +x mvnw
+    - ./mvnw clean compile
 
 test_backend:
   stage: test
+  image: maven:3.9.6-eclipse-temurin-17
+
   script:
     - cd backend
-    - .\mvnw test
+    - chmod +x mvnw
+    - ./mvnw test
 
-# ----- PIPELINE FRONTEND (React) -----
+# ----- FRONTEND -----
 build_frontend:
   stage: build
+  image: node:20
+
   script:
     - cd frontend
     - npm install
