@@ -15,5 +15,5 @@ public class ConflictException extends RuntimeException {
         return conflicts;
     }
 
-    public record ConflictDetail(String type, String projectTitle, String startTime, String endTime) {}
+    public record ConflictDetail(String type, String message, String projectTitle, String startTime, String endTime) {}
 }

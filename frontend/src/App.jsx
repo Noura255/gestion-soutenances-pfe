@@ -13,6 +13,14 @@ import StudentDashboard from './pages/student/StudentDashboard'
 import SupervisorDashboard from './pages/supervisor/SupervisorDashboard'
 import JuryDashboard from './pages/jury/JuryDashboard'
 import AdministrationDashboard from './pages/administration/AdministrationDashboard'
+import ProjectManagement from './pages/administration/ProjectManagement'
+import JuryAssignment from './pages/administration/JuryAssignment'
+import RoomManagement from './pages/administration/RoomManagement'
+import DefensePlanning from './pages/administration/DefensePlanning'
+import VisibleReports from './pages/administration/VisibleReports'
+import PlanningExport from './pages/administration/PlanningExport'
+import AdministrationChatbot from './pages/administration/AdministrationChatbot'
+import AdministrationLayout from './components/administration/AdministrationLayout'
 import Layout from './components/common/Layout'
 import ProtectedRoute from './routes/ProtectedRoute'
 import RoleBasedDashboard from './routes/RoleBasedDashboard'
@@ -56,8 +64,15 @@ export default function App() {
       </Route>
 
       <Route element={<ProtectedRoute allowedRoles={['ADMINISTRATION']} />}>
-        <Route element={<Layout />}>
+        <Route element={<AdministrationLayout />}>
           <Route path="/administration/dashboard" element={<AdministrationDashboard />} />
+          <Route path="/administration/projects" element={<ProjectManagement />} />
+          <Route path="/administration/jury-assignment" element={<JuryAssignment />} />
+          <Route path="/administration/rooms" element={<RoomManagement />} />
+          <Route path="/administration/planning" element={<DefensePlanning />} />
+          <Route path="/administration/reports" element={<VisibleReports />} />
+          <Route path="/administration/exports" element={<PlanningExport />} />
+          <Route path="/administration/chatbot" element={<AdministrationChatbot />} />
         </Route>
       </Route>
 

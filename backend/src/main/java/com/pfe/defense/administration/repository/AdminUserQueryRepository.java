@@ -11,5 +11,7 @@ import java.util.List;
  */
 public interface AdminUserQueryRepository extends JpaRepository<User, Long> {
 
+    List<User> findAllByRole(Role role);
+
     List<User> findAllByRoleIn(List<Role> roles);
 }

@@ -4,7 +4,7 @@ import ConflictAlert from './ConflictAlert'
 
 const EMPTY = { projectId: '', defenseDate: '', startTime: '', endTime: '', roomId: '' }
 
-export default function DefenseForm({ initial, onSuccess, onCancel }) {
+export default function DefenseForm({ initial, initialProjectId, onSuccess, onCancel }) {
   const [form, setForm] = useState(EMPTY)
   const [projects, setProjects] = useState([])
   const [rooms, setRooms] = useState([])
@@ -22,6 +22,12 @@ export default function DefenseForm({ initial, onSuccess, onCancel }) {
     }).catch(() => setError('Impossible de charger les données.'))
   }, [])
 
+  const eligibleProjects = projects.filter(p =>
+    p.juryStatus === 'JURY_ASSIGNED'
+    && (initial?.id ? p.projectId === initial.projectId : p.defenseStatus === 'NOT_SCHEDULED')
+  )
+  const selectedProject = projects.find(p => String(p.projectId) === String(form.projectId))
+
   useEffect(() => {
     if (initial) {
       setForm({
@@ -31,8 +37,10 @@ export default function DefenseForm({ initial, onSuccess, onCancel }) {
         endTime:     initial.endTime     ?? '',
         roomId:      initial.room?.id    ?? '',
       })
+    } else if (initialProjectId) {
+      setForm(current => ({ ...current, projectId: initialProjectId }))
     }
-  }, [initial])
+  }, [initial, initialProjectId])
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
@@ -75,13 +83,29 @@ export default function DefenseForm({ initial, onSuccess, onCancel }) {
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Projet *</label>
         <select required value={form.projectId} onChange={e => set('projectId', e.target.value)}
+          disabled={Boolean(initial?.id)}
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
           <option value="">-- Sélectionner un projet --</option>
-          {projects.map(p => (
-            <option key={p.projectId} value={p.projectId}>{p.title} — {p.studentName}</option>
+          {eligibleProjects.map(p => (
+            <option key={p.projectId} value={p.projectId}>{p.title} — {p.studentOrGroup}</option>
           ))}
         </select>
+        <p className="mt-1 text-xs text-gray-500">Seuls les projets avec jury affecté peuvent être planifiés.</p>
       </div>
+
+      {selectedProject && (
+        <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-3 text-sm text-indigo-900">
+          <p className="font-medium">Jury retenu pour cette soutenance</p>
+          <p className="mt-1">
+            Président : {selectedProject.president?.firstName} {selectedProject.president?.lastName}
+          </p>
+          <p>Examinateur 1 : {selectedProject.examiner1?.firstName} {selectedProject.examiner1?.lastName}</p>
+          <p>Examinateur 2 : {selectedProject.examiner2?.firstName} {selectedProject.examiner2?.lastName}</p>
+          {selectedProject.guest && (
+            <p>Invité : {selectedProject.guest.firstName} {selectedProject.guest.lastName}</p>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-3 gap-4">
         <div>

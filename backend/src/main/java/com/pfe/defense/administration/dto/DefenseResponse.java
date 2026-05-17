@@ -7,11 +7,15 @@ public record DefenseResponse(
         Long         id,
         Long         projectId,
         String       projectTitle,
-        String       studentName,
+        String       studentOrGroup,
         LocalDate    defenseDate,
         LocalTime    startTime,
         LocalTime    endTime,
         RoomResponse room,
         String       status,
-        boolean      published
+        boolean      published,
+        UserSummary  president,
+        UserSummary  examiner1,
+        UserSummary  examiner2,
+        UserSummary  guest
 ) {}

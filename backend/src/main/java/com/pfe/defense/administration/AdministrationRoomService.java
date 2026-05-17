@@ -18,11 +18,14 @@ public class AdministrationRoomService {
 
     private final AdminRoomQueryRepository    roomRepo;
     private final AdminDefenseQueryRepository defenseRepo;
+    private final AdministrationAuditService  auditService;
 
     public AdministrationRoomService(AdminRoomQueryRepository roomRepo,
-                                     AdminDefenseQueryRepository defenseRepo) {
+                                     AdminDefenseQueryRepository defenseRepo,
+                                     AdministrationAuditService auditService) {
         this.roomRepo    = roomRepo;
         this.defenseRepo = defenseRepo;
+        this.auditService = auditService;
     }
 
     @Transactional(readOnly = true)
@@ -34,7 +37,9 @@ public class AdministrationRoomService {
     public RoomResponse createRoom(RoomRequest request) {
         Room room = new Room();
         apply(room, request);
-        return toResponse(roomRepo.save(room));
+        Room saved = roomRepo.save(room);
+        auditService.log("CREATE_ROOM", "Création de la salle \"" + saved.getName() + "\"");
+        return toResponse(saved);
     }
 
     @Transactional
@@ -42,7 +47,9 @@ public class AdministrationRoomService {
         Room room = roomRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Salle introuvable : " + id));
         apply(room, request);
-        return toResponse(roomRepo.save(room));
+        Room saved = roomRepo.save(room);
+        auditService.log("UPDATE_ROOM", "Modification de la salle \"" + saved.getName() + "\"");
+        return toResponse(saved);
     }
 
     @Transactional
@@ -59,6 +66,7 @@ public class AdministrationRoomService {
                     "Impossible de supprimer la salle : elle est utilisée dans une soutenance planifiée.");
         }
         roomRepo.delete(room);
+        auditService.log("DELETE_ROOM", "Suppression de la salle \"" + room.getName() + "\"");
     }
 
     private void apply(Room room, RoomRequest req) {

@@ -23,11 +23,15 @@ import java.util.List;
 public class AdministrationExportService {
 
     private final AdminDefenseQueryRepository defenseRepo;
+    private final AdministrationAuditService auditService;
 
-    public AdministrationExportService(AdminDefenseQueryRepository defenseRepo) {
+    public AdministrationExportService(AdminDefenseQueryRepository defenseRepo,
+                                       AdministrationAuditService auditService) {
         this.defenseRepo = defenseRepo;
+        this.auditService = auditService;
     }
 
+    @Transactional
     public byte[] exportPdf() throws IOException {
         List<Defense> defenses = defenseRepo.findAllByStatus(DefenseStatus.PUBLISHED);
 
@@ -93,10 +97,12 @@ public class AdministrationExportService {
             }
 
             doc.save(out);
+            auditService.log("EXPORT_PLANNING_PDF", "Export PDF du planning des soutenances");
             return out.toByteArray();
         }
     }
 
+    @Transactional
     public byte[] exportExcel() throws IOException {
         List<Defense> defenses = defenseRepo.findAllByStatus(DefenseStatus.PUBLISHED);
 
@@ -115,8 +121,8 @@ public class AdministrationExportService {
 
             // En-têtes
             Row header = sheet.createRow(0);
-            String[] cols = {"Projet", "Etudiant", "Encadrant", "Date", "Heure début", "Heure fin",
-                             "Salle", "Bâtiment", "Président jury", "Examinateur 1", "Examinateur 2"};
+            String[] cols = {"Etudiant", "Titre projet", "Encadrant", "Président jury", "Examinateur 1",
+                    "Examinateur 2", "Salle", "Bâtiment", "Date", "Heure début", "Heure fin", "Statut"};
             for (int i = 0; i < cols.length; i++) {
                 Cell cell = header.createCell(i);
                 cell.setCellValue(cols[i]);
@@ -128,42 +134,79 @@ public class AdministrationExportService {
             int rowNum = 1;
             for (Defense d : defenses) {
                 Row row = sheet.createRow(rowNum++);
-                row.createCell(0).setCellValue(d.getProject().getTitle());
-
                 String student = d.getProject().getStudent() != null
                         ? d.getProject().getStudent().getFirstName() + " " + d.getProject().getStudent().getLastName()
                         : "-";
-                row.createCell(1).setCellValue(student);
+                row.createCell(0).setCellValue(student);
+                row.createCell(1).setCellValue(d.getProject().getTitle());
 
                 String supervisor = d.getProject().getSupervisor() != null
                         ? d.getProject().getSupervisor().getFirstName() + " " + d.getProject().getSupervisor().getLastName()
                         : "-";
                 row.createCell(2).setCellValue(supervisor);
 
-                row.createCell(3).setCellValue(d.getDefenseDate() != null ? d.getDefenseDate().toString() : "-");
-                row.createCell(4).setCellValue(d.getStartTime()   != null ? d.getStartTime().toString()   : "-");
-                row.createCell(5).setCellValue(d.getEndTime()     != null ? d.getEndTime().toString()     : "-");
-                row.createCell(6).setCellValue(d.getRoom()        != null ? d.getRoom().getName()         : "-");
-                row.createCell(7).setCellValue(d.getRoom()        != null ? d.getRoom().getBuilding()     : "-");
-
                 if (d.getJuryAssignment() != null) {
                     var ja = d.getJuryAssignment();
-                    row.createCell(8).setCellValue(ja.getPresident()  != null
+                    row.createCell(3).setCellValue(ja.getPresident()  != null
                             ? ja.getPresident().getFirstName()  + " " + ja.getPresident().getLastName()  : "-");
-                    row.createCell(9).setCellValue(ja.getExaminer1()  != null
+                    row.createCell(4).setCellValue(ja.getExaminer1()  != null
                             ? ja.getExaminer1().getFirstName()  + " " + ja.getExaminer1().getLastName()  : "-");
-                    row.createCell(10).setCellValue(ja.getExaminer2() != null
+                    row.createCell(5).setCellValue(ja.getExaminer2() != null
                             ? ja.getExaminer2().getFirstName()  + " " + ja.getExaminer2().getLastName()  : "-");
                 }
+                row.createCell(6).setCellValue(d.getRoom()        != null ? d.getRoom().getName()         : "-");
+                row.createCell(7).setCellValue(d.getRoom()        != null ? d.getRoom().getBuilding()     : "-");
+                row.createCell(8).setCellValue(d.getDefenseDate() != null ? d.getDefenseDate().toString() : "-");
+                row.createCell(9).setCellValue(d.getStartTime()   != null ? d.getStartTime().toString()   : "-");
+                row.createCell(10).setCellValue(d.getEndTime()    != null ? d.getEndTime().toString()     : "-");
+                row.createCell(11).setCellValue(d.getStatus().name());
             }
 
             wb.write(out);
+            auditService.log("EXPORT_PLANNING_EXCEL", "Export Excel du planning des soutenances");
             return out.toByteArray();
         }
+    }
+
+    @Transactional
+    public byte[] exportCsv() {
+        List<Defense> defenses = defenseRepo.findAllByStatus(DefenseStatus.PUBLISHED);
+        StringBuilder csv = new StringBuilder();
+        csv.append("Etudiant,Titre projet,Encadrant,Président jury,Examinateur 1,Examinateur 2,Salle,Bâtiment,Date,Heure début,Heure fin,Statut\n");
+
+        for (Defense defense : defenses) {
+            csv.append(csvValue(fullName(defense.getProject().getStudent()))).append(',')
+                    .append(csvValue(defense.getProject().getTitle())).append(',')
+                    .append(csvValue(fullName(defense.getProject().getSupervisor()))).append(',');
+
+            var jury = defense.getJuryAssignment();
+            csv.append(csvValue(jury != null ? fullName(jury.getPresident()) : "-")).append(',')
+                    .append(csvValue(jury != null ? fullName(jury.getExaminer1()) : "-")).append(',')
+                    .append(csvValue(jury != null ? fullName(jury.getExaminer2()) : "-")).append(',')
+                    .append(csvValue(defense.getRoom() != null ? defense.getRoom().getName() : "-")).append(',')
+                    .append(csvValue(defense.getRoom() != null ? defense.getRoom().getBuilding() : "-")).append(',')
+                    .append(csvValue(defense.getDefenseDate() != null ? defense.getDefenseDate().toString() : "-")).append(',')
+                    .append(csvValue(defense.getStartTime() != null ? defense.getStartTime().toString() : "-")).append(',')
+                    .append(csvValue(defense.getEndTime() != null ? defense.getEndTime().toString() : "-")).append(',')
+                    .append(csvValue(defense.getStatus().name()))
+                    .append('\n');
+        }
+
+        auditService.log("EXPORT_PLANNING_CSV", "Export CSV du planning des soutenances");
+        return csv.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
     }
 
     private String truncate(String s, int max) {
         if (s == null) return "";
         return s.length() > max ? s.substring(0, max - 1) + "…" : s;
+    }
+
+    private String fullName(com.pfe.defense.user.User user) {
+        return user == null ? "-" : user.getFirstName() + " " + user.getLastName();
+    }
+
+    private String csvValue(String value) {
+        String safe = value == null ? "" : value.replace("\"", "\"\"");
+        return "\"" + safe + "\"";
     }
 }

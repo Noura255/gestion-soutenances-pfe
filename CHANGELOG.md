@@ -1,5 +1,19 @@
 # Changelog
 
+## [Module administration pédagogique] - 2026-05-17
+
+- Ajout de la navbar administration dédiée.
+- Ajout du dashboard administration pédagogique.
+- Ajout de la gestion des projets.
+- Ajout de l’affectation des jurys.
+- Ajout de la gestion des salles.
+- Ajout du planning des soutenances.
+- Ajout de la publication du planning.
+- Ajout de la consultation des rapports visibles.
+- Ajout des exports du planning.
+- Ajout du chatbot administration.
+- Ajout des audit logs administration.
+
 ## [Seeder initial] - 2026-05-16
 
 - Création du `DataSeeder` idempotent.

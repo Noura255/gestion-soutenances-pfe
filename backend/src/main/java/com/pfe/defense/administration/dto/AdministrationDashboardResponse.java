@@ -1,11 +1,14 @@
 package com.pfe.defense.administration.dto;
 
 public record AdministrationDashboardResponse(
-        long totalProjectsSubmitted,
+        long totalProjects,
         long projectsWithoutJury,
-        long defensesNotScheduled,
+        long projectsWithJury,
+        long unscheduledDefenses,
+        long scheduledDefenses,
+        long publishedDefenses,
         long availableRooms,
-        int  conflictsDetected,
-        long reportsVisible,
-        long reportsNotVisible
+        long visibleReports,
+        long nonVisibleReports,
+        int  conflictsCount
 ) {}

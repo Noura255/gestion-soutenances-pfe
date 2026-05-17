@@ -9,6 +9,7 @@ import com.pfe.defense.administration.repository.AdminRoomQueryRepository;
 import com.pfe.defense.defense.Defense;
 import com.pfe.defense.defense.DefenseStatus;
 import com.pfe.defense.jury.JuryAssignment;
+import com.pfe.defense.project.ProjectStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,25 +36,30 @@ public class AdministrationDashboardService {
     }
 
     public AdministrationDashboardResponse getDashboard() {
-        long totalSubmitted    = projectRepo.countSubmitted();
-        long withoutJury       = projectRepo.findAllWithoutJury().size();
-        long notScheduled      = countDefensesNotScheduled(totalSubmitted);
-        long availableRooms    = roomRepo.findAllByAvailableTrue().size();
-        int  conflicts         = detectAllConflicts().size();
-        long reportsVisible    = reportRepo.countByVisibleToJuryTrue();
-        long reportsNotVisible = reportRepo.countNotVisibleButSubmitted();
+        long totalProjects       = projectRepo.countSubmitted();
+        long withoutJury         = projectRepo.findAllWithoutJury().size();
+        long withJury            = Math.max(0, totalProjects - withoutJury);
+        long unscheduledDefenses = countDefensesNotScheduled();
+        long scheduledDefenses   = defenseRepo.countByStatus(DefenseStatus.SCHEDULED);
+        long publishedDefenses   = defenseRepo.countByStatus(DefenseStatus.PUBLISHED);
+        long availableRooms      = roomRepo.findAllByAvailableTrue().size();
+        long visibleReports      = reportRepo.countVisibleToJury();
+        long nonVisibleReports   = reportRepo.countNotVisibleButSubmitted();
+        int conflictsCount       = detectAllConflicts().size();
 
         return new AdministrationDashboardResponse(
-                totalSubmitted, withoutJury, notScheduled,
-                availableRooms, conflicts, reportsVisible, reportsNotVisible
+                totalProjects, withoutJury, withJury, unscheduledDefenses,
+                scheduledDefenses, publishedDefenses, availableRooms,
+                visibleReports, nonVisibleReports, conflictsCount
         );
     }
 
-    private long countDefensesNotScheduled(long totalSubmitted) {
-        long scheduled = defenseRepo.findAll().stream()
-                .filter(d -> d.getStatus() != DefenseStatus.NOT_SCHEDULED)
+    private long countDefensesNotScheduled() {
+        return projectRepo.findAllWithDetails().stream()
+                .filter(project -> project.getStatus() != ProjectStatus.DRAFT)
+                .filter(project -> project.getDefense() == null
+                        || project.getDefense().getStatus() == DefenseStatus.NOT_SCHEDULED)
                 .count();
-        return Math.max(0, totalSubmitted - scheduled);
     }
 
     public List<ConflictException.ConflictDetail> detectAllConflicts() {
@@ -78,6 +84,7 @@ public class AdministrationDashboardService {
                         && d1.getRoom().getId().equals(d2.getRoom().getId())) {
                     conflicts.add(new ConflictException.ConflictDetail(
                             "ROOM",
+                            "La même salle est utilisée par deux soutenances sur le même créneau.",
                             d1.getProject().getTitle() + " / " + d2.getProject().getTitle(),
                             d1.getStartTime().toString(), d1.getEndTime().toString()));
                 }
@@ -92,9 +99,21 @@ public class AdministrationDashboardService {
                     if (!ids1.isEmpty()) {
                         conflicts.add(new ConflictException.ConflictDetail(
                                 "TEACHER",
+                                "Un membre du jury est affecté à deux soutenances sur le même créneau.",
                                 d1.getProject().getTitle() + " / " + d2.getProject().getTitle(),
                                 d1.getStartTime().toString(), d1.getEndTime().toString()));
                     }
+                }
+
+                // Conflit encadrant
+                if (d1.getProject().getSupervisor() != null && d2.getProject().getSupervisor() != null
+                        && d1.getProject().getSupervisor().getId()
+                            .equals(d2.getProject().getSupervisor().getId())) {
+                    conflicts.add(new ConflictException.ConflictDetail(
+                            "SUPERVISOR",
+                            "Le même encadrant est impliqué dans deux soutenances sur le même créneau.",
+                            d1.getProject().getTitle() + " / " + d2.getProject().getTitle(),
+                            d1.getStartTime().toString(), d1.getEndTime().toString()));
                 }
 
                 // Conflit étudiant
@@ -103,6 +122,7 @@ public class AdministrationDashboardService {
                             .equals(d2.getProject().getStudent().getId())) {
                     conflicts.add(new ConflictException.ConflictDetail(
                             "STUDENT",
+                            "Le même étudiant est associé à deux soutenances sur le même créneau.",
                             d1.getProject().getTitle() + " / " + d2.getProject().getTitle(),
                             d1.getStartTime().toString(), d1.getEndTime().toString()));
                 }

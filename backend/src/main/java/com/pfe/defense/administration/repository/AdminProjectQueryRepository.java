@@ -24,8 +24,27 @@ public interface AdminProjectQueryRepository extends JpaRepository<Project, Long
             LEFT JOIN FETCH p.supervisor
             LEFT JOIN FETCH p.report
             LEFT JOIN FETCH p.defense
-            LEFT JOIN FETCH p.juryAssignment
+            LEFT JOIN FETCH p.juryAssignment ja
+            LEFT JOIN FETCH ja.president
+            LEFT JOIN FETCH ja.examiner1
+            LEFT JOIN FETCH ja.examiner2
+            LEFT JOIN FETCH ja.guest
             ORDER BY p.createdAt DESC
             """)
     List<Project> findAllWithDetails();
+
+    @Query("""
+            SELECT p FROM Project p
+            LEFT JOIN FETCH p.student
+            LEFT JOIN FETCH p.supervisor
+            LEFT JOIN FETCH p.report
+            LEFT JOIN FETCH p.defense
+            LEFT JOIN FETCH p.juryAssignment ja
+            LEFT JOIN FETCH ja.president
+            LEFT JOIN FETCH ja.examiner1
+            LEFT JOIN FETCH ja.examiner2
+            LEFT JOIN FETCH ja.guest
+            WHERE p.id = :id
+            """)
+    java.util.Optional<Project> findByIdWithDetails(Long id);
 }

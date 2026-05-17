@@ -1,8 +1,9 @@
-const TYPE_LABELS = { ROOM: 'Salle', TEACHER: 'Enseignant', STUDENT: 'Étudiant' }
+const TYPE_LABELS = { ROOM: 'Salle', TEACHER: 'Jury', STUDENT: 'Étudiant', SUPERVISOR: 'Encadrant' }
 const TYPE_COLORS = {
   ROOM:    'bg-red-50 border-red-300 text-red-800',
   TEACHER: 'bg-orange-50 border-orange-300 text-orange-800',
   STUDENT: 'bg-yellow-50 border-yellow-300 text-yellow-800',
+  SUPERVISOR: 'bg-purple-50 border-purple-300 text-purple-800',
 }
 
 export default function ConflictAlert({ conflicts, onClose }) {
@@ -24,7 +25,7 @@ export default function ConflictAlert({ conflicts, onClose }) {
         {conflicts.map((c, i) => (
           <li key={i} className={`text-sm px-3 py-1 rounded border ${TYPE_COLORS[c.type] || 'bg-gray-50 border-gray-300 text-gray-700'}`}>
             <span className="font-medium">[{TYPE_LABELS[c.type] || c.type}]</span>{' '}
-            {c.projectTitle} — {c.startTime} → {c.endTime}
+            {c.message || c.projectTitle} {c.projectTitle && `— ${c.projectTitle}`} — {c.startTime} → {c.endTime}
           </li>
         ))}
       </ul>

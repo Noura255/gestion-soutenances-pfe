@@ -15,6 +15,9 @@ const STATUS_COLORS = {
   SCHEDULED:     'bg-blue-100 text-blue-700',
   PUBLISHED:     'bg-green-100 text-green-700',
   COMPLETED:     'bg-indigo-100 text-indigo-700',
+  // Jury
+  NOT_ASSIGNED:  'bg-gray-100 text-gray-500',
+  JURY_ASSIGNED: 'bg-green-100 text-green-700',
 }
 
 const STATUS_LABELS = {
@@ -22,8 +25,9 @@ const STATUS_LABELS = {
   NOT_SUBMITTED: 'Non soumis', SUBMITTED_TO_SUPERVISOR: 'Soumis encadrant',
   NEEDS_CORRECTION: 'Correction', APPROVED_BY_SUPERVISOR: 'Approuvé',
   VISIBLE_TO_JURY: 'Visible jury',
-  NOT_SCHEDULED: 'Non planifié', SCHEDULED: 'Planifié',
+  NOT_SCHEDULED: 'Non planifié', SCHEDULED: 'Brouillon',
   PUBLISHED: 'Publié', COMPLETED: 'Terminé',
+  NOT_ASSIGNED: 'Non affecté', JURY_ASSIGNED: 'Affecté',
 }
 
 export default function ProjectStatusBadge({ status }) {

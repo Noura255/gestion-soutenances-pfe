@@ -1,36 +1,47 @@
 import { useState } from 'react'
+import AlertMessage from '../../components/administration/AlertMessage'
+import ConflictAlert from '../../components/administration/ConflictAlert'
 import api from '../../services/api'
+
+const exportsConfig = [
+  { type: 'csv', label: 'Exporter en CSV', accent: 'bg-slate-900 hover:bg-slate-700', filename: 'planning-soutenances.csv' },
+  { type: 'excel', label: 'Exporter en Excel', accent: 'bg-emerald-600 hover:bg-emerald-700', filename: 'planning-soutenances.xlsx' },
+  { type: 'pdf', label: 'Exporter en PDF', accent: 'bg-rose-600 hover:bg-rose-700', filename: 'planning-soutenances.pdf' },
+]
 
 export default function PlanningExport() {
   const [publishing, setPublishing] = useState(false)
   const [publishResult, setPublishResult] = useState(null)
+  const [downloading, setDownloading] = useState(null)
   const [error, setError] = useState(null)
-  const [downloading, setDownloading] = useState(null) // 'pdf' | 'excel' | null
+  const [conflicts, setConflicts] = useState([])
 
-  const handlePublish = async () => {
+  const publish = async () => {
     setPublishing(true)
     setError(null)
-    setPublishResult(null)
+    setConflicts([])
     try {
-      const res = await api.put('/administration/defenses/publish')
-      setPublishResult(res.data.published)
+      const { data } = await api.put('/administration/defenses/publish')
+      setPublishResult(data.published)
     } catch (err) {
-      setError(err.response?.data?.message || 'Erreur lors de la publication.')
+      if (err.response?.status === 409) {
+        setConflicts(err.response.data.conflicts || [])
+      }
+      setError(err.response?.data?.message || 'La publication a échoué.')
     } finally {
       setPublishing(false)
     }
   }
 
-  const handleExport = async (type) => {
+  const exportPlanning = async ({ type, filename }) => {
     setDownloading(type)
     setError(null)
     try {
-      const res = await api.get(`/administration/export/${type}`, { responseType: 'blob' })
-      const filename = type === 'pdf' ? 'planning-soutenances.pdf' : 'planning-soutenances.xlsx'
-      const url = window.URL.createObjectURL(new Blob([res.data]))
+      const { data } = await api.get(`/administration/export/planning/${type}`, { responseType: 'blob' })
+      const url = window.URL.createObjectURL(new Blob([data]))
       const link = document.createElement('a')
       link.href = url
-      link.setAttribute('download', filename)
+      link.download = filename
       document.body.appendChild(link)
       link.click()
       link.remove()
@@ -45,69 +56,56 @@ export default function PlanningExport() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Publication & Export</h2>
-        <p className="text-sm text-gray-500 mt-0.5">Publiez le planning final et exportez-le en PDF ou Excel.</p>
+        <p className="text-sm font-medium text-indigo-600">Publication & export</p>
+        <h2 className="mt-1 text-3xl font-bold tracking-tight text-slate-950">Planning final</h2>
+        <p className="mt-2 text-sm text-slate-500">Publier d’abord, exporter ensuite.</p>
       </div>
 
-      {error && (
-        <div className="rounded-xl bg-red-50 border border-red-200 p-4 text-red-700 text-sm">{error}</div>
-      )}
-
+      {error && <AlertMessage tone="error">{error}</AlertMessage>}
       {publishResult !== null && (
-        <div className="rounded-xl bg-green-50 border border-green-200 p-4 text-green-700 text-sm">
-          ✅ {publishResult} soutenance(s) publiée(s) avec succès.
-        </div>
+        <AlertMessage tone="success">{publishResult} soutenance(s) publiée(s) avec succès.</AlertMessage>
       )}
+      <ConflictAlert conflicts={conflicts} onClose={() => setConflicts([])} />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Publication */}
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-3">
-          <div className="text-3xl">📢</div>
-          <h3 className="font-semibold text-gray-900">Publier le planning</h3>
-          <p className="text-sm text-gray-500">
-            Toutes les soutenances avec le statut <span className="font-medium">Planifié</span> seront publiées.
+      <section className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <p className="text-sm font-medium text-indigo-600">Étape 1</p>
+          <h3 className="mt-1 text-xl font-semibold text-slate-950">Publier le planning</h3>
+          <p className="mt-3 text-sm leading-6 text-slate-600">
+            Seules les soutenances planifiées, avec salle et jury valides, passent de SCHEDULED à PUBLISHED.
           </p>
-          <button onClick={handlePublish} disabled={publishing}
-            className="w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors">
-            {publishing ? 'Publication…' : 'Publier maintenant'}
+          <button
+            type="button"
+            onClick={publish}
+            disabled={publishing}
+            className="mt-5 rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+          >
+            {publishing ? 'Publication…' : 'Publier le planning'}
           </button>
         </div>
 
-        {/* Export PDF */}
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-3">
-          <div className="text-3xl">📄</div>
-          <h3 className="font-semibold text-gray-900">Exporter en PDF</h3>
-          <p className="text-sm text-gray-500">
-            Téléchargez le planning des soutenances publiées au format PDF.
-          </p>
-          <button onClick={() => handleExport('pdf')} disabled={downloading === 'pdf'}
-            className="w-full px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors">
-            {downloading === 'pdf' ? 'Génération…' : 'Télécharger PDF'}
-          </button>
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <p className="text-sm font-medium text-indigo-600">Étape 2</p>
+          <h3 className="mt-1 text-xl font-semibold text-slate-950">Exporter</h3>
+          <div className="mt-5 grid gap-3">
+            {exportsConfig.map(config => (
+              <button
+                key={config.type}
+                type="button"
+                onClick={() => exportPlanning(config)}
+                disabled={downloading === config.type}
+                className={`rounded-2xl px-4 py-3 text-sm font-medium text-white disabled:opacity-50 ${config.accent}`}
+              >
+                {downloading === config.type ? 'Génération…' : config.label}
+              </button>
+            ))}
+          </div>
         </div>
+      </section>
 
-        {/* Export Excel */}
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-3">
-          <div className="text-3xl">📊</div>
-          <h3 className="font-semibold text-gray-900">Exporter en Excel</h3>
-          <p className="text-sm text-gray-500">
-            Téléchargez le planning des soutenances publiées au format Excel.
-          </p>
-          <button onClick={() => handleExport('excel')} disabled={downloading === 'excel'}
-            className="w-full px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors">
-            {downloading === 'excel' ? 'Génération…' : 'Télécharger Excel'}
-          </button>
-        </div>
-      </div>
-
-      {/* Info */}
-      <div className="rounded-xl bg-blue-50 border border-blue-200 p-4">
-        <p className="text-sm text-blue-700">
-          <span className="font-medium">Note :</span> Seules les soutenances avec le statut{' '}
-          <span className="font-medium">Publié</span> apparaissent dans les exports.
-          Publiez d'abord le planning avant d'exporter.
-        </p>
-      </div>
+      <AlertMessage tone="info">
+        Les exports contiennent l’étudiant, le projet, l’encadrant, le jury, la salle, le bâtiment, la date, les horaires et le statut.
+      </AlertMessage>
     </div>
   )
 }

@@ -16,16 +16,48 @@ import java.util.List;
 public interface AdminDefenseQueryRepository extends JpaRepository<Defense, Long> {
 
     List<Defense> findAllByStatus(DefenseStatus status);
+    long countByStatus(DefenseStatus status);
 
     // Chercher une soutenance par projet (pour scheduleDefense)
     @Query("SELECT d FROM Defense d WHERE d.project.id = :projectId")
     java.util.Optional<Defense> findByProjectId(@Param("projectId") Long projectId);
 
-    // Toutes les soutenances planifiées avec leurs relations (pour détection de conflits globale)
     @Query("""
-            SELECT d FROM Defense d
+            SELECT DISTINCT d FROM Defense d
             LEFT JOIN FETCH d.project p
             LEFT JOIN FETCH p.student
+            LEFT JOIN FETCH p.supervisor
+            LEFT JOIN FETCH d.room
+            LEFT JOIN FETCH d.juryAssignment ja
+            LEFT JOIN FETCH ja.president
+            LEFT JOIN FETCH ja.examiner1
+            LEFT JOIN FETCH ja.examiner2
+            LEFT JOIN FETCH ja.guest
+            ORDER BY d.defenseDate ASC, d.startTime ASC
+            """)
+    List<Defense> findAllWithDetails();
+
+    @Query("""
+            SELECT DISTINCT d FROM Defense d
+            LEFT JOIN FETCH d.project p
+            LEFT JOIN FETCH p.student
+            LEFT JOIN FETCH p.supervisor
+            LEFT JOIN FETCH d.room
+            LEFT JOIN FETCH d.juryAssignment ja
+            LEFT JOIN FETCH ja.president
+            LEFT JOIN FETCH ja.examiner1
+            LEFT JOIN FETCH ja.examiner2
+            LEFT JOIN FETCH ja.guest
+            WHERE d.id = :id
+            """)
+    java.util.Optional<Defense> findByIdWithDetails(@Param("id") Long id);
+
+    // Toutes les soutenances planifiées avec leurs relations (pour détection de conflits globale)
+    @Query("""
+            SELECT DISTINCT d FROM Defense d
+            LEFT JOIN FETCH d.project p
+            LEFT JOIN FETCH p.student
+            LEFT JOIN FETCH p.supervisor
             LEFT JOIN FETCH d.room
             LEFT JOIN FETCH d.juryAssignment ja
             LEFT JOIN FETCH ja.president
@@ -44,6 +76,7 @@ public interface AdminDefenseQueryRepository extends JpaRepository<Defense, Long
               AND d.startTime < :endTime
               AND d.endTime > :startTime
               AND d.project.id <> :excludeProjectId
+              AND d.status IN ('SCHEDULED', 'PUBLISHED')
             """)
     List<Defense> findRoomConflicts(@Param("roomId") Long roomId,
                                     @Param("date") LocalDate date,
@@ -59,6 +92,7 @@ public interface AdminDefenseQueryRepository extends JpaRepository<Defense, Long
               AND d.startTime < :endTime
               AND d.endTime > :startTime
               AND d.project.id <> :excludeProjectId
+              AND d.status IN ('SCHEDULED', 'PUBLISHED')
               AND (ja.president.id = :teacherId
                 OR ja.examiner1.id = :teacherId
                 OR ja.examiner2.id = :teacherId
@@ -78,10 +112,26 @@ public interface AdminDefenseQueryRepository extends JpaRepository<Defense, Long
               AND d.startTime < :endTime
               AND d.endTime > :startTime
               AND d.project.id <> :excludeProjectId
+              AND d.status IN ('SCHEDULED', 'PUBLISHED')
             """)
     List<Defense> findStudentConflicts(@Param("studentId") Long studentId,
                                        @Param("date") LocalDate date,
                                        @Param("startTime") LocalTime startTime,
                                        @Param("endTime") LocalTime endTime,
                                        @Param("excludeProjectId") Long excludeProjectId);
+
+    @Query("""
+            SELECT d FROM Defense d
+            WHERE d.project.supervisor.id = :supervisorId
+              AND d.defenseDate = :date
+              AND d.startTime < :endTime
+              AND d.endTime > :startTime
+              AND d.project.id <> :excludeProjectId
+              AND d.status IN ('SCHEDULED', 'PUBLISHED')
+            """)
+    List<Defense> findSupervisorConflicts(@Param("supervisorId") Long supervisorId,
+                                          @Param("date") LocalDate date,
+                                          @Param("startTime") LocalTime startTime,
+                                          @Param("endTime") LocalTime endTime,
+                                          @Param("excludeProjectId") Long excludeProjectId);
 }
