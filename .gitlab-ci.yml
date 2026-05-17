@@ -2,11 +2,14 @@ stages:
   - build
   - test
 
+# ----- PIPELINE BACKEND (Spring Boot) -----
 build_backend:
   stage: build
   script:
     - cd backend
     - .\mvnw clean compile
+  # tags:
+  #   - windows  # Décommente cette ligne si tu as mis le tag 'windows' lors de la création du runner
 
 test_backend:
   stage: test
@@ -14,6 +17,7 @@ test_backend:
     - cd backend
     - .\mvnw test
 
+# ----- PIPELINE FRONTEND (React) -----
 build_frontend:
   stage: build
   script:
