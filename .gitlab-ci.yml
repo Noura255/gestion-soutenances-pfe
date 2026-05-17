@@ -1,57 +1,26 @@
 stages:
-  - test
   - build
-  - docker-build
-  - deploy
+  - test
 
-variables:
-  DOCKER_TLS_CERTDIR: ""
+# ----- PIPELINE BACKEND (Spring Boot) -----
+build_backend:
+  stage: build
+  script:
+    - cd backend
+    - .\mvnw clean compile
+  # tags:
+  #   - windows  # Décommente cette ligne si tu as mis le tag 'windows' lors de la création du runner
 
-backend-test:
+test_backend:
   stage: test
-  image: maven:3.9-eclipse-temurin-17
   script:
     - cd backend
-    - chmod +x mvnw
-    - ./mvnw test
+    - .\mvnw test
 
-backend-build:
+# ----- PIPELINE FRONTEND (React) -----
+build_frontend:
   stage: build
-  image: maven:3.9-eclipse-temurin-17
-  script:
-    - cd backend
-    - chmod +x mvnw
-    - ./mvnw -DskipTests package
-  artifacts:
-    paths:
-      - backend/target/*.jar
-
-frontend-build:
-  stage: build
-  image: node:20-alpine
   script:
     - cd frontend
     - npm install
     - npm run build
-  artifacts:
-    paths:
-      - frontend/dist/
-
-docker-build:
-  stage: docker-build
-  image: docker:27
-  services:
-    - docker:27-dind
-  script:
-    - docker build -t sg-soutenance-backend:$CI_COMMIT_SHORT_SHA ./backend
-    - docker build -t sg-soutenance-frontend:$CI_COMMIT_SHORT_SHA ./frontend
-  rules:
-    - if: '$CI_COMMIT_BRANCH'
-
-deploy:
-  stage: deploy
-  image: alpine:3.20
-  script:
-    - echo "Déploiement à brancher sur l'environnement cible après validation du pipeline."
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
