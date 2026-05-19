@@ -121,7 +121,7 @@ deploy_staging:
     name: staging
     url: http://$STAGING_HOST
   rules:
-    - if: $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_COMMIT_BRANCH == "develop" && $STAGING_SSH_PRIVATE_KEY
 
 # --- Deploy to Production (branch master) ---
 deploy_production:
@@ -142,5 +142,5 @@ deploy_production:
     name: production
     url: http://$PROD_HOST
   rules:
-    - if: $CI_COMMIT_BRANCH == "master"
+    - if: $CI_COMMIT_BRANCH == "master" && $PROD_SSH_PRIVATE_KEY
       when: manual
