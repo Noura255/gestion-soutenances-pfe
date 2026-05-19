@@ -1,6 +1,6 @@
 # ================================================================
-#  GitLab CI/CD — Système Gestion Soutenance
-#  Stages: build → test → docker → deploy
+#  GitLab CI/CD - Systeme Gestion Soutenance
+#  Stages: build > test > docker > deploy
 # ================================================================
 
 stages:
@@ -10,15 +10,14 @@ stages:
   - deploy
 
 variables:
-  # Docker image names — override in GitLab CI/CD Settings > Variables
-  DOCKER_REGISTRY: ${CI_REGISTRY}                          # GitLab Container Registry
-  BACKEND_IMAGE:   ${CI_REGISTRY_IMAGE}/backend
-  FRONTEND_IMAGE:  ${CI_REGISTRY_IMAGE}/frontend
-  IMAGE_TAG:       ${CI_COMMIT_SHORT_SHA}
+  DOCKER_REGISTRY: ${CI_REGISTRY}
+  BACKEND_IMAGE: ${CI_REGISTRY_IMAGE}/backend
+  FRONTEND_IMAGE: ${CI_REGISTRY_IMAGE}/frontend
+  IMAGE_TAG: ${CI_COMMIT_SHORT_SHA}
 
-# ──────────────────────────────────────────
+# ----------------------------------------
 #  STAGE 1 : BUILD
-# ──────────────────────────────────────────
+# ----------------------------------------
 
 # ----- BACKEND -----
 build_backend:
@@ -46,9 +45,9 @@ build_frontend:
       - frontend/dist/
     expire_in: 1 hour
 
-# ──────────────────────────────────────────
+# ----------------------------------------
 #  STAGE 2 : TEST
-# ──────────────────────────────────────────
+# ----------------------------------------
 
 test_backend:
   stage: test
@@ -64,9 +63,9 @@ test_backend:
     reports:
       junit: backend/target/surefire-reports/*.xml
 
-# ──────────────────────────────────────────
-#  STAGE 3 : DOCKER — Build & Push Images
-# ──────────────────────────────────────────
+# ----------------------------------------
+#  STAGE 3 : DOCKER - Build & Push Images
+# ----------------------------------------
 
 .docker_base:
   stage: docker
@@ -99,9 +98,9 @@ docker_frontend:
     - docker push $FRONTEND_IMAGE:$IMAGE_TAG
     - docker push $FRONTEND_IMAGE:latest
 
-# ──────────────────────────────────────────
+# ----------------------------------------
 #  STAGE 4 : DEPLOY
-# ──────────────────────────────────────────
+# ----------------------------------------
 
 # --- Deploy to Staging (branch develop) ---
 deploy_staging:
@@ -117,15 +116,7 @@ deploy_staging:
     - mkdir -p ~/.ssh
     - echo "$STAGING_SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
   script:
-    - |
-      ssh $STAGING_USER@$STAGING_HOST << 'ENDSSH'
-        cd /opt/sg-soutenance
-        echo "CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE}" > .env.deploy
-        echo "IMAGE_TAG=${IMAGE_TAG}" >> .env.deploy
-        docker compose pull
-        docker compose up -d --remove-orphans
-        docker image prune -f
-      ENDSSH
+    - ssh $STAGING_USER@$STAGING_HOST "cd /opt/sg-soutenance && docker compose pull && docker compose up -d --remove-orphans && docker image prune -f"
   environment:
     name: staging
     url: http://$STAGING_HOST
@@ -146,18 +137,10 @@ deploy_production:
     - mkdir -p ~/.ssh
     - echo "$PROD_SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
   script:
-    - |
-      ssh $PROD_USER@$PROD_HOST << 'ENDSSH'
-        cd /opt/sg-soutenance
-        echo "CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE}" > .env.deploy
-        echo "IMAGE_TAG=${IMAGE_TAG}" >> .env.deploy
-        docker compose pull
-        docker compose up -d --remove-orphans
-        docker image prune -f
-      ENDSSH
+    - ssh $PROD_USER@$PROD_HOST "cd /opt/sg-soutenance && docker compose pull && docker compose up -d --remove-orphans && docker image prune -f"
   environment:
     name: production
     url: http://$PROD_HOST
   rules:
     - if: $CI_COMMIT_BRANCH == "master"
-  when: manual
+      when: manual
