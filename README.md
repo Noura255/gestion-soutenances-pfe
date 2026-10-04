@@ -7,7 +7,20 @@ Base commune d'une application de gestion des soutenances **PFE / Master**.
 - Backend : Spring Boot 3, Java 17, Maven, Spring Security, JWT, JPA / Hibernate, MySQL
 - Frontend : React, Vite, Tailwind CSS
 - DevOps : GitLab CI/CD, GitLab Runner
+## 👥 Projet d'équipe et ma contribution
 
+Projet réalisé en équipe dans le cadre de la formation d'ingénieur (FSTG Marrakech). Dépôt GitLab d'origine : https://gitlab.com/Mouad2D2/system_gestion_soutenance
+
+**Ma partie : le module Administration (backend Spring Boot)**
+- Tableau de bord de l'administration pédagogique
+- Planification des soutenances, avec détection des conflits
+- Affectation des jurys
+- Gestion des salles
+- Export des données
+- Service d'assistant (chatbot) pour l'administration
+- Conception du module (document de design)
+
+**Équipe :** Mouad Jaalouti, Anas (IRISI), Mohammed Allali, Mohammed Handache, Anas Halloumi, Noura Lamzara
 ## Architecture
 
 ```text
